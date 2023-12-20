@@ -1,12 +1,13 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
+#include <EEPROM.h>
 WiFiMulti wifiMulti;
 #include "FastLED.h"
 // #include "FastLED.h"
 // #define NUM_LEDS 1
 // #define DATA_PIN 5
 // CRGB leds[NUM_LEDS];
-
+#define EEPROM_SIZE 3
 #define NUM_LEDS 7
 #define DATA_PIN 5
 CRGB leds[NUM_LEDS];
@@ -32,6 +33,8 @@ unsigned long callMaterialCountDown = 0;
 const uint32_t connectTimeoutMs = 10000;
 int state = 0;
 int countState = 0;
+int light_lock = 0;
+int sample;
 
 #define LED_PIN GPIO_NUM_27  //LED đơn theo dõi
 
@@ -46,14 +49,17 @@ EasyButton button3(BUTTON_PIN3);
 EasyButton button4(BUTTON_PIN4);
 
 
-String ID = "A1-CB-22";
+String ID = "J1-CL-02";
+String machine_name1 = "?MachineName=UCBD&ErrorCode=1";
+String machine_name2 = "?MachineName=UCBD&ErrorCode=2";
+String machine_name3 = "?MachineName=UCBD&ErrorCode=3";
 String rfid;
 //Your Domain name with URL path or IP address with path
 
 String callLeader = "http://172.21.143.74:8080/cmmsservice/repairCheckList/up/VY/1:" + ID + ":123456";
 String callMaterial = "http://172.21.143.74:8080/cmmsservice/repairCheckList/up/VY/3:" + ID + ":123456";
 String callalive = "http://172.21.143.74:8080/cmmsservice/repairCheckList/healthCheck/VY/" + ID + "";
-
+String serverName = "http://172.21.149.109:8005/aco_issue";
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
 unsigned long lastTime = 0;
@@ -66,12 +72,31 @@ void setup() {
   Serial.begin(115200);
   delay(10);
   SPI.begin();
+  EEPROM.begin(EEPROM_SIZE);
   delay(100);
+  state = EEPROM.read(0);
+  countState = EEPROM.read(1);
+  // hàm chạy cho chip nạp lần đầu
+  if (state==255&&countState==255){
+    EEPROM.write(0, 0);
+    EEPROM.write(1, 0);
+    EEPROM.commit();
+  }
+  if(countState>=2)
+    {
+      countState=0;
+      EEPROM.write(1, countState);
+      EEPROM.commit();
+      Serial.println("reset countstate do bấm linh tinh");
+    }
+  Serial.print("countState: ");
+  Serial.println(countState);
   mfrc522.PCD_Init();
   delay(50);
   WiFi.mode(WIFI_STA);
   wifiMulti.addAP("SteveiPhone", "11223344");
-   wifiMulti.addAP("factory-A10-1F-3", "qwerasdf");
+  wifiMulti.addAP("factory-A10-1F-4", "qwerasdf");
+  wifiMulti.addAP("factory-A10-1F-3", "qwerasdf");
   wifiMulti.addAP("factory-A10-1F-2", "qwerasdf");
   wifiMulti.addAP("factory-A10-1F-1", "qwerasdf");
 
@@ -190,9 +215,11 @@ void loop() {
     check_WIFI();
     countingTimeWIFIcheck = millis();
   }
-
   switch (state) {
     case 0:
+      if(light_lock==1){
+          return;
+        }
       denhoatdong();
       break;
     case 1:
@@ -200,31 +227,55 @@ void loop() {
       //   state =3;
       //   break;
       // }
-      dencanbo();
+      
       if (millis() - callLeaderCountDown >= 60000) {
         state = 0;
         callLeaderCountDown = millis();
-      }
+        light_lock=0;
+        break;
+      } 
+      if(light_lock==1){
+        return;
+      }  
+      dencanbo();  
       break;
     case 2:
       // if ((state == 3)||(state == 4)) {
       //   state =3;
       //   break;
-      // }
-      denhetlieu();
+      // }   
       if (millis() - callMaterialCountDown >= 60000) {
         state = 0;
         callMaterialCountDown = millis();
+        light_lock=0;
+        break;
       }
+      if(light_lock==1){
+        return;
+      }  
+      denhetlieu();
       break;
     case 3:
+      if(light_lock==1){
+          return;
+        }
       denbaotri();
       break;
     case 4:
+      if(light_lock==1){
+          return;
+        }
       den_nhan_don();
       if(countState==2){
         state =0;
         countState =0;
+        light_lock = 0;
+        EEPROM.write(0, state);
+        EEPROM.write(1, countState);
+        EEPROM.commit();
+        Serial.print("countState: ");
+        Serial.println(countState);
+        Serial.println("State saved in flash memory");
       }
       break;
   }
