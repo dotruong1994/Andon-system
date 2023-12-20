@@ -7,7 +7,27 @@ void check_WIFI(){
   } else {
     Serial.println("WiFi not connected!");
     digitalWrite(LED_PIN, HIGH);
-    delay(100);
+    delay(50);
+    digitalWrite(LED_PIN, LOW);
+    delay(50);
+    digitalWrite(LED_PIN, HIGH);
+    delay(50);
+    digitalWrite(LED_PIN, LOW);
+    delay(50);
+    digitalWrite(LED_PIN, HIGH);
+    delay(50);
+    digitalWrite(LED_PIN, LOW);
+    delay(50);
+    digitalWrite(LED_PIN, HIGH);
+    delay(50);
+    digitalWrite(LED_PIN, LOW);
+    delay(50);
+    digitalWrite(LED_PIN, HIGH);
+    delay(50);
+    digitalWrite(LED_PIN, LOW);
+    delay(50);
+    digitalWrite(LED_PIN, HIGH);
+    delay(50);
     digitalWrite(LED_PIN, LOW);
     long now = millis();
       if (now - espRestartTimeOut > 10000) {
