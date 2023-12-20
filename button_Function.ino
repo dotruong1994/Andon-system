@@ -1,4 +1,5 @@
 void leader() {
+  light_lock = 0;
   if ((state == 3) || (state == 4)) {
     return;
   }
@@ -7,7 +8,6 @@ void leader() {
     String callLeader_Str = callLeader;
     http.begin(callLeader_Str.c_str());
     int httpResponseCode = http.GET();
-
     if (httpResponseCode > 0) {
       Serial.print("HTTP Response code: ");
       Serial.println(httpResponseCode);
@@ -21,6 +21,7 @@ void leader() {
     }
     // Free resources
     http.end();
+    // line_report_gunstuck();
   } else {
     Serial.println("WiFi Disconnected");
   }
@@ -30,6 +31,7 @@ void leader() {
 }
 
 void material() {
+  light_lock = 0;
   if ((state == 3) || (state == 4)) {
     return;
   }
@@ -52,6 +54,7 @@ void material() {
     }
     // Free resources
     http.end();
+    // line_report_overCement();
   } else {
     Serial.println("WiFi Disconnected");
   }
