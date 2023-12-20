@@ -10,6 +10,7 @@ void check_RFID() {
 
 
 void call_tpm() {
+  light_lock = 0;
   Serial.println("Got it");
   if (!mfrc522.PICC_IsNewCardPresent()) {
     Serial.println("RFID read");
@@ -45,6 +46,7 @@ void call_tpm() {
 
 
 void receive_order() {
+  light_lock = 0;
   Serial.println("Got it");
   if (!mfrc522.PICC_IsNewCardPresent()) {
     Serial.println("RFID read");
